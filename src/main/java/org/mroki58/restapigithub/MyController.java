@@ -3,9 +3,11 @@ package org.mroki58.restapigithub;
 import org.mroki58.restapigithub.dto.BranchDto;
 import org.mroki58.restapigithub.dto.RepositoryDto;
 import org.mroki58.restapigithub.dto.RepositoryWithBranchDto;
+import org.mroki58.restapigithub.exception.MissingUsernameException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
@@ -24,22 +26,12 @@ public class MyController {
     }
 
     @GetMapping("/")
-    public ResponseEntity<Object> index() {
-
-        List<RepositoryDto> repositories = service.getAllUsersRepositories(username);
-        List<RepositoryDto> notForks = filterNotForks(repositories);
-
-        List<RepositoryWithBranchDto> response = new ArrayList<>();
-
-        for(RepositoryDto repo: notForks) {
-            List<BranchDto> branches  = service.getBranchesForRepository(username, repo.getName());
-            List<RepositoryWithBranchDto.Branch> br = new ArrayList<>();
-            for(var branch: branches) {
-                br.add(new RepositoryWithBranchDto.Branch(branch.getName(), branch.getCommit().getSha()));
-            }
-            response.add(new RepositoryWithBranchDto(repo.getName(), repo.getOwner().getLogin(), br));
+    public ResponseEntity<Object> index(@RequestParam(required = false) String username) {
+        if(username == null || username.isEmpty()) {
+            throw new MissingUsernameException();
         }
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        List<RepositoryWithBranchDto> data = service.getPublicRepositoriesWithBranches(username);
+        return new ResponseEntity<>(data, HttpStatus.OK);
     }
 }
