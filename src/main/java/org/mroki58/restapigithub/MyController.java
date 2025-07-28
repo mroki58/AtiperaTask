@@ -1,7 +1,5 @@
 package org.mroki58.restapigithub;
 
-import org.mroki58.restapigithub.dto.BranchDto;
-import org.mroki58.restapigithub.dto.RepositoryDto;
 import org.mroki58.restapigithub.dto.RepositoryWithBranchDto;
 import org.mroki58.restapigithub.exception.MissingUsernameException;
 import org.springframework.http.HttpStatus;
@@ -10,19 +8,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import static org.mroki58.restapigithub.utils.FilterUtils.filterNotForks;
 
 @RestController
 public class MyController {
 
-    private final String username = "mroki58";
-    private final MyService service;
+    private final GithubService githubService;
 
-    MyController(MyService service) {
-        this.service = service;
+    MyController(GithubService githubService) {
+        this.githubService = githubService;
     }
 
     @GetMapping("/")
@@ -31,7 +26,7 @@ public class MyController {
             throw new MissingUsernameException();
         }
 
-        List<RepositoryWithBranchDto> data = service.getPublicRepositoriesWithBranches(username);
+        List<RepositoryWithBranchDto> data = githubService.getPublicRepositoriesWithBranches(username);
         return new ResponseEntity<>(data, HttpStatus.OK);
     }
 }

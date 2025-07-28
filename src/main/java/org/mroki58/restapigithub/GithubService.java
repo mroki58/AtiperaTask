@@ -4,7 +4,6 @@ import org.mroki58.restapigithub.dto.BranchDto;
 import org.mroki58.restapigithub.dto.RepositoryDto;
 import org.mroki58.restapigithub.dto.RepositoryWithBranchDto;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -18,17 +17,16 @@ import javafx.util.Pair;
 import static org.mroki58.restapigithub.utils.FilterUtils.filterNotForks;
 
 @Service
-public class MyService {
+public class GithubService {
     private final RestTemplate restTemplate;
+    private final AsyncGithubService asyncGithubService;
 
     @Value("${github.url.repos}")
     private String reposUrl;
 
-    @Value("${github.url.branches}")
-    private String branchesUrl;
-
-    public MyService(RestTemplate restTemplate) {
+    public GithubService(RestTemplate restTemplate, AsyncGithubService asyncGithubService) {
         this.restTemplate = restTemplate;
+        this.asyncGithubService = asyncGithubService;
     }
 
     public List<RepositoryWithBranchDto> getPublicRepositoriesWithBranches(String username) {
@@ -38,7 +36,7 @@ public class MyService {
         List<Pair<RepositoryDto, CompletableFuture<List<BranchDto>>>> futures = new ArrayList<>();
 
         for (RepositoryDto repo : notForks) {
-            CompletableFuture<List<BranchDto>> futureBranches = getBranchesForRepository(username, repo.getName());
+            CompletableFuture<List<BranchDto>> futureBranches = asyncGithubService.getBranchesForRepository(username, repo.getName());
             futures.add(new Pair<>(repo, futureBranches));
         }
 
@@ -58,20 +56,10 @@ public class MyService {
 
     }
 
-
     public List<RepositoryDto> getAllUsersRepositories(String username)
     {
         String url =  String.format(reposUrl, username);
         RepositoryDto[] response = restTemplate.getForEntity(url, RepositoryDto[].class).getBody();
         return Arrays.asList(Optional.ofNullable(response).orElse(new RepositoryDto[0]));
-    }
-
-    @Async
-    public CompletableFuture<List<BranchDto>> getBranchesForRepository(String username, String repositoryName)
-    {
-        String url =  String.format(branchesUrl, username, repositoryName);
-        BranchDto[] response = restTemplate.getForEntity(url, BranchDto[].class).getBody();
-        List<BranchDto> branches = Arrays.asList(Optional.ofNullable(response).orElse(new BranchDto[0]));
-        return CompletableFuture.completedFuture(branches);
     }
 }
