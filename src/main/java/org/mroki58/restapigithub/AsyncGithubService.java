@@ -14,12 +14,11 @@ import java.util.concurrent.CompletableFuture;
 @Service
 public class AsyncGithubService {
     private final RestTemplate restTemplate;
+    private final String branchesUrl;
 
-    @Value("${github.url.branches}")
-    private String branchesUrl;
-
-    public AsyncGithubService(RestTemplate restTemplate) {
+    public AsyncGithubService(RestTemplate restTemplate, @Value("${github.url.branches}") String branchesUrl) {
         this.restTemplate = restTemplate;
+        this.branchesUrl = branchesUrl;
     }
 
     @Async

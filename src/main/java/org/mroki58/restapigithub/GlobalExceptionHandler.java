@@ -18,7 +18,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ResponseEntity<Map<String, String>> handleMissingUsername() {
         Map<String, String> errorBody = new HashMap<>();
-        errorBody.put("status", "422");
+        errorBody.put("status", "Unprocessable Entity");
         errorBody.put("message", "Missing required query parameter: username");
         return ResponseEntity.status(404)
                 .body(errorBody);
@@ -27,8 +27,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RestClientResponseException.class)
     public ResponseEntity<Map<String, String>> handleRestClientResponseException(RestClientResponseException ex) {
         Map<String, String> errorBody = new HashMap<>();
-        errorBody.put("status", String.valueOf(ex.getStatusCode().value()));
-        errorBody.put("message", ex.getResponseBodyAsString());
+
+        errorBody.put("status", ex.getStatusText());
+        errorBody.put("message", ex.getMessage());
 
         return ResponseEntity.status(404)
                 .body(errorBody);
